@@ -22,6 +22,16 @@ class GameplayScene extends Phaser.Scene {
     preload() {
         this.load.image('pengoBordaSupInf', './assets/atari26/bordas.png');
         this.load.image('pengoBordasVert', './assets/atari26/bordasVerticais.png');
+
+        // Blocos que podem ser quebrados
+        this.load.image('blocoGelo', './assets/arcade/blocoGelo.png');
+        // Blocos indestrutíveis
+        this.load.image('blocoDuro', './assets/arcade/blocoGeloDuro.png');
+
+        this.load.spritesheet('pengosSnoBees', './assets/arcade/PengoSnooBees.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
     }
 
     create() {
@@ -54,6 +64,9 @@ class GameplayScene extends Phaser.Scene {
         // Implementa a lógica do gameplay aqui...
         // Exemplo de como avançar de nível
         this.advanceLevel();
+
+        // Cria o labirinto
+        this.criarLabirinto();
     }
 
     configureGameplay(difficulty) {
@@ -68,6 +81,26 @@ class GameplayScene extends Phaser.Scene {
 
         // Aqui você pode criar os inimigos com base em numberOfEnemies
         // e ajustar suas velocidades para enemySpeed
+    }
+
+    criarLabirinto() {
+        const blocoSize = 16;
+        const cols = Math.floor((this.game.config.width - 32) / blocoSize);
+        const rows = Math.floor((this.game.config.height - 32) / blocoSize);
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                // Aqui você pode definir a lógica para determinar onde um bloco será duro ou quebrável
+                const blocoType = Phaser.Math.Between(0, 1) === 0 ? 'blocoGelo' : 'blocoDuro';
+
+                // Posição onde o bloco será colocado, considerando as bordas
+                const posX = x * blocoSize + 16;
+                const posY = y * blocoSize + 16;
+
+                // Adiciona o bloco ao jogo
+                this.add.image(posX, posY, blocoType).setOrigin(0, 0);
+            }
+        }
     }
 
     advanceLevel() {
