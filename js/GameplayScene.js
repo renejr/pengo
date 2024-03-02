@@ -28,7 +28,42 @@ class GameplayScene extends Phaser.Scene {
         // Blocos indestrutíveis
         this.load.image('blocoDuro', './assets/arcade/blocoGeloDuro.png');
 
-        this.load.spritesheet('pengosSnoBees', './assets/arcade/PengoSnooBees.png', {
+        this.load.spritesheet('redPengo', './assets/arcade/redPengo.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('greenPengo', './assets/arcade/greenPengo.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('yellowPengo', './assets/arcade/yellowPengo.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('pinkPengo', './assets/arcade/pinkPengo.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('pinkPengo', './assets/arcade/pinkPengo.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('bluePengo', './assets/arcade/bluePengo.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('pinkPengo', './assets/arcade/pinkPengo.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('pinkPengo', './assets/arcade/pinkPengo.png', {
             frameWidth: Math.floor(16),
             frameHeight: Math.floor(16)
         }); // Arcade
