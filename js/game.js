@@ -1,7 +1,7 @@
 const config = {
     type: Phaser.AUTO,
-    width: 800, // substitua pela largura desejada
-    height: 600, // substitua pela altura desejada
+    width: 1280, // substitua pela largura desejada
+    height: 640, // substitua pela altura desejada
     parent: 'game-container',
     audio: {
         disableWebAudio: false

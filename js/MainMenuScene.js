@@ -24,8 +24,8 @@ class MainMenuScene extends Phaser.Scene {
         bgImage.setScale(scale).setScrollFactor(0);
 
         // Criar botões
-        let playButton = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY - 20, 'Play', { fontSize: '32px', fill: '#FFF' }).setInteractive();
-        let optionsButton = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY + 20, 'Options', { fontSize: '32px', fill: '#FFF' }).setInteractive();
+        let playButton = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY - 20, 'Play', { fontSize: '42px', fill: '#FFF' }).setInteractive();
+        let optionsButton = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY + 20, 'Options', { fontSize: '42px', fill: '#FFF' }).setInteractive();
         optionsButton.on('pointerdown', () => this.scene.start('SettingsScene'));
         optionsButton.setOrigin(0.5);
 

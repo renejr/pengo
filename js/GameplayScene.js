@@ -49,10 +49,9 @@ class GameplayScene extends Phaser.Scene {
         };
     }
     
-
     preload() {
-        this.load.image('pengoBordaSupInf', './assets/atari26/bordas.png');
-        this.load.image('pengoBordasVert', './assets/atari26/bordasVerticais.png');
+        this.load.image('pengoBordaSupInf', './assets/atari26/bordas_upscaled.png');
+        this.load.image('pengoBordasVert', './assets/atari26/bordasverticais_upscaled.png');
 
         // Blocos que podem ser quebrados
         this.load.image('blocoGelo', './assets/arcade/blocoGelo.png');
@@ -100,7 +99,7 @@ class GameplayScene extends Phaser.Scene {
         }); // Arcade
     }
 
-    create() {
+    create(){
         // Acessa valores do registry
         this.currentDifficulty = this.game.registry.get('currentDifficulty') || 'Normal';
         let lives = this.game.registry.get('lives') || 4;
@@ -132,24 +131,50 @@ class GameplayScene extends Phaser.Scene {
         // Exemplo de como avançar de nível
         this.advanceLevel();
 
-        this.criarLabirinto(); // Inicializa o labirinto
-        const posicaoLivre = this.encontrarPosicaoLivre(); // Encontra uma posição livre
-
-        // Nomes dos spritesheets de Pengo
-        const pengoSprites = ['redPengo', 'greenPengo', 'yellowPengo', 'pinkPengo', 'orangePengo', 'bluePengo', 'lightBluePengo', 'yellow2Pengo'];
-        const selectedPengo = pengoSprites[Phaser.Math.Between(0, pengoSprites.length - 1)];
-
-        // Adiciona Pengo ao jogo usando a posição livre encontrada
-        this.pengo = this.add.sprite(posicaoLivre.posX, posicaoLivre.posY, selectedPengo).setScale(1.3);
-        this.pengo.setDepth(100);
-
-        // Configuração dos controles do teclado
+        // Configura entradas do teclado
         this.cursors = this.input.keyboard.createCursorKeys();
 
-        // Configura animações de Pengo
-        this.configurePengoAnimations();
+        this.criarLabirinto(); // Inicializa o labirinto
 
-        //this.pintarCelulasLivres(); // Pinta células livres de verde claro
+        this.criarPengo(); // Após criar o Pengo
+        this.configurePengoAnimations(); // Configura as animações do Pengo
+    }
+
+    update(time, delta) {
+        // Movimento para a esquerda
+        if (this.cursors.left.isDown) {
+            this.pengo.setVelocityX(-this.pengoMaxSpeed);
+            this.pengo.anims.play('moveLeft', true);
+        } 
+        // Movimento para a direita
+        else if (this.cursors.right.isDown) {
+            this.pengo.setVelocityX(this.pengoMaxSpeed);
+            this.pengo.anims.play('moveRight', true); // Certifique-se de ter a animação 'moveRight'
+        } 
+        // Movimento para cima
+        else if (this.cursors.up.isDown) {
+            this.pengo.setVelocityY(-this.pengoMaxSpeed);
+            this.pengo.anims.play('moveUp', true);
+        } 
+        // Movimento para baixo
+        else if (this.cursors.down.isDown) {
+            this.pengo.setVelocityY(this.pengoMaxSpeed);
+            this.pengo.anims.play('moveDown', true);
+        } else {
+            // Parado (idle)
+            this.pengo.setVelocityX(0);
+            this.pengo.setVelocityY(0);
+            this.pengo.anims.play('idle', true);
+        }
+    }    
+
+    advanceLevel() {
+        // Incrementa o nível
+        this.currentLevel++;
+        console.log('Nível Atual:', this.currentLevel);
+
+        // Aqui você pode ajustar a dificuldade baseada no nível atual
+        // e reiniciar ou atualizar a cena conforme necessário
     }
 
     configureGameplay(difficulty) {
@@ -170,19 +195,18 @@ class GameplayScene extends Phaser.Scene {
         const difficultySettings = this.difficultySettings[this.currentDifficulty];
         const numberOfEnemies = difficultySettings.numberOfEnemies;
     
-        const cols = Math.floor((this.game.config.width ) / 40);
-        const rows = Math.floor((this.game.config.height ) / 40);
+        const cols = Math.floor((this.game.config.width) / 40);
+        const rows = Math.floor((this.game.config.height) / 40);
         this.labirinto = []; // Inicializa this.labirinto
-
-        let contadorEspacos = 1; // Inicia o contador de espaços em branco
-        const probabilidadeBlocoGelo = 0.2; // 20%
     
+        // Garante espaços para movimentação criando um padrão alternado de blocos
         for (let y = 0; y < rows; y++) {
             let row = [];
             for (let x = 0; x < cols; x++) {
                 let isEdge = x === 0 || y === 0 || x === cols - 1 || y === rows - 1;
-                if (!isEdge) {
-                    row.push(Phaser.Math.FloatBetween(0, 1) < 0.2 ? 'blocoGelo' : null);
+                if (!isEdge && (x % 2 === 1 || y % 2 === 1)) {
+                    // Alternância para garantir corredores
+                    row.push(Phaser.Math.FloatBetween(0, 1) < 0.75 ? 'blocoGelo' : null); // Aumenta a chance para blocos de gelo, mas deixa espaço
                 } else {
                     row.push(null);
                 }
@@ -190,13 +214,13 @@ class GameplayScene extends Phaser.Scene {
             this.labirinto.push(row);
         }
     
-        // Adiciona blocos duros em posições aleatórias
+        // Adiciona blocos duros em posições estratégicas, evitando bloquear completamente qualquer caminho
         for (let i = 0; i < numberOfEnemies; i++) {
             let x, y;
             do {
-                x = Phaser.Math.Between(1, cols - 2);
-                y = Phaser.Math.Between(1, rows - 2);
-            } while (this.labirinto[y][x]); // Garante que não substitua um bloco de gelo
+                x = Phaser.Math.Between(2, cols - 3); // Evita a primeira e última coluna/linha
+                y = Phaser.Math.Between(2, rows - 3);
+            } while (this.labirinto[y][x] || ((x % 2 === 0) && (y % 2 === 0))); // Evita sobrepor blocos de gelo e coloca em posições que não formem barreiras intransponíveis
             this.labirinto[y][x] = 'blocoDuro';
         }
     
@@ -204,89 +228,42 @@ class GameplayScene extends Phaser.Scene {
         for (let y = 0; y < rows; y++) {
             for (let x = 0; x < cols; x++) {
                 if (this.labirinto[y][x]) {
-                    const posX = x * 40 + 16; // Posição x do bloco
-                    const posY = y * 40 + 16; // Posição y do bloco
-                    this.add.image(posX, posY, this.labirinto[y][x]).setOrigin(0, 0);
-                }
-            }
-        }
-    }
-
-    pintarCelulasLivres() {
-        const blocoSize = 40; // Tamanho do bloco ajustado para as novas dimensões
-        for (let y = 0; y < this.labirinto.length; y++) {
-            for (let x = 0; x < this.labirinto[y].length; x++) {
-                if (this.labirinto[y][x] === null) { // Célula livre
-                    let rect = this.add.rectangle(x * blocoSize + 20, y * blocoSize + 20, blocoSize, blocoSize, 0x90ee90).setOrigin(0.5);
-                    rect.setDepth(0); // Certifique-se de que está abaixo do Pengo
+                    const posX = x * 40 + 20; // Centraliza o bloco no tile
+                    const posY = y * 40 + 20;
+                    this.add.image(posX, posY, this.labirinto[y][x]).setOrigin(0.5, 0.5).setScale(1);
                 }
             }
         }
     }
     
-    
-    encontrarPosicaoLivre() {
+    criarPengo() {
         const cols = Math.floor(this.game.config.width / 40);
         const rows = Math.floor(this.game.config.height / 40);
+        let posX, posY, spaceFound = false;
     
-        let posicaoLivreEncontrada = false;
-        let posX, posY;
+        // Busca por um espaço livre no labirinto
+        while (!spaceFound) {
+            let x = Phaser.Math.Between(1, cols - 2);
+            let y = Phaser.Math.Between(1, rows - 2);
     
-        while (!posicaoLivreEncontrada) {
-            const x = Phaser.Math.Between(1, cols - 2);
-            const y = Phaser.Math.Between(1, rows - 2);
-    
-            // Garante que this.labirinto[y] não é undefined antes de tentar acessar this.labirinto[y][x]
-            if (this.labirinto[y] && this.labirinto[y][x] === null) {
-                posX = x * 40 + 40 / 2; // Ajuste para a posição do centro do bloco, se necessário
-                posY = y * 40 + 40 / 2;
-                posicaoLivreEncontrada = true;
+            if (!this.labirinto[y][x]) { // Verifica se a célula está vazia
+                posX = x * 40 + 20; // Posição centralizada do sprite no tile
+                posY = y * 40 + 20;
+                spaceFound = true;
             }
         }
     
-        return { posX, posY };
-    }
+        // Escolhe um sprite de Pengo aleatoriamente
+        const pengoSprites = [
+            'redPengo', 'greenPengo', 'yellowPengo', 'pinkPengo', 
+            'orangePengo', 'bluePengo', 'lightBluePengo', 'yellow2Pengo'
+        ];
+        const pengoColor = Phaser.Utils.Array.GetRandom(pengoSprites);
     
-    advanceLevel() {
-        // Incrementa o nível
-        this.currentLevel++;
-        console.log('Nível Atual:', this.currentLevel);
-
-        // Aqui você pode ajustar a dificuldade baseada no nível atual
-        // e reiniciar ou atualizar a cena conforme necessário
-    }
-
-    // Adicione métodos para atualizar a pontuação
-    smashSnoBee(count) {
-        if (count === 1) {
-            this.score += this.SCORE_VALUES.SMASH_SNO_BEE;
-        } else if (count === 2) {
-            this.score += this.SCORE_VALUES.SMASH_TWO_SNO_BEES;
-        } else if (count === 3) {
-            this.score += this.SCORE_VALUES.SMASH_THREE_SNO_BEES;
-        }
-
-        // Atualize a pontuação na tela, se necessário
-    }
-
-    lineDiamondBlocks(alongWall) {
-        this.score += alongWall ? this.SCORE_VALUES.LINE_DIAMOND_BLOCKS_WALL : this.SCORE_VALUES.LINE_DIAMOND_BLOCKS_NOWALL;
-
-        // Atualize a pontuação na tela, se necessário
-    }
-
-    calculateTimeBonus(timeLeft) {
-        // Encontra o maior intervalo de tempo que é menor ou igual ao tempo restante
-        let bonus = 0;
-        for (const time in this.TIME_BONUS) {
-            if (timeLeft >= time) {
-                bonus = this.TIME_BONUS[time];
-                break;
-            }
-        }
-        this.score += bonus;
-
-        // Atualize a pontuação na tela, se necessário
+        // Cria o Pengo na posição encontrada
+        this.pengo = this.physics.add.sprite(posX, posY, pengoColor);
+        this.pengo.setOrigin(0.5, 0.5).setScale(3); // Centraliza o sprite
+        this.pengo.setCollideWorldBounds(true); // Faz Pengo colidir com as bordas do mundo
     }
 
     configurePengoAnimations() {
@@ -310,13 +287,22 @@ class GameplayScene extends Phaser.Scene {
             frameRate: 10,
             repeat: -1
         });
-    
+
         this.anims.create({
-            key: 'die',
-            frames: this.anims.generateFrameNumbers(this.pengo.texture.key, { start: 15, end: 17 }),
+            key: 'moveRight',
+            frames: this.anims.generateFrameNumbers(this.pengo.texture.key, { start: 6, end: 7 }),
             frameRate: 10,
-            repeat: 0
+            repeat: -1
         });
+    
+        if (!this.anims.exists('die')) {
+            this.anims.create({
+                key: 'die',
+                frames: this.anims.generateFrameNumbers('pengo', { start: 15, end: 17 }),
+                frameRate: 10,
+                repeat: 0
+            });
+        }
     
         this.anims.create({
             key: 'idle',
@@ -324,72 +310,5 @@ class GameplayScene extends Phaser.Scene {
             frameRate: 10
         });
     }
-
-    movePengo(deltaX, deltaY) {
-        let newX = this.pengo.x + deltaX * 40; // Atualizado para 40 pixels
-        let newY = this.pengo.y + deltaY * 40;
-        
-        let newTileX = Math.floor(newX / 40);
-        let newTileY = Math.floor(newY / 40);
-        
-        if (newTileX >= 0 && newTileX < this.labirinto[0].length && newTileY >= 0 && newTileY < this.labirinto.length && this.labirinto[newTileY][newTileX] === null) {
-            this.pengo.x = newX;
-            this.pengo.y = newY;
-            // Adiciona a profundidade aqui
-            this.pengo.setDepth(100);
-        }
-    }
-    
-    update(time, delta) {
-        const deltaSeconds = delta / 1000; // Converte delta para segundos
-    
-        // Determina a direção desejada de movimento baseada na entrada do jogador
-        let desiredVelocityX = 0;
-        let desiredVelocityY = 0;
-    
-        if (this.cursors.left.isDown) {
-            desiredVelocityX = -this.pengoAcceleration;
-            this.pengo.anims.play('moveLeft', true);
-        } else if (this.cursors.right.isDown) {
-            desiredVelocityX = this.pengoAcceleration;
-            this.pengo.anims.play('moveRight', true);
-        }
-    
-        if (this.cursors.up.isDown) {
-            desiredVelocityY = -this.pengoAcceleration;
-            this.pengo.anims.play('moveUp', true);
-        } else if (this.cursors.down.isDown) {
-            desiredVelocityY = this.pengoAcceleration;
-            this.pengo.anims.play('moveDown', true);
-        }
-    
-        // Calcula a nova posição proposta para o Pengo
-        let proposedNewX = this.pengo.x + desiredVelocityX * deltaSeconds;
-        let proposedNewY = this.pengo.y + desiredVelocityY * deltaSeconds;
-    
-        // Converte a posição proposta para índices de grade do labirinto
-        let newTileX = Math.floor(proposedNewX / (40 * 1.3));
-        let newTileY = Math.floor(proposedNewY / (40 * 1.3));
-    
-        // Verifica se a posição proposta está em um bloco livre
-        if (this.canMoveTo(newTileX, Math.floor(this.pengo.y / (40 * 1.3)))) {
-            this.pengo.x = proposedNewX;
-        }
-    
-        if (this.canMoveTo(Math.floor(this.pengo.x / (40 * 1.3)), newTileY)) {
-            this.pengo.y = proposedNewY;
-        }
-    
-        // Se nenhuma tecla está pressionada, exibe a animação "idle"
-        if (desiredVelocityX === 0 && desiredVelocityY === 0) {
-            this.pengo.anims.play('idle', true);
-        }
-    }
-    
-    canMoveTo(x, y) {
-        // Garante que a célula destino está dentro do labirinto e é um espaço livre
-        return x >= 0 && x < this.labirinto[0].length && y >= 0 && y < this.labirinto.length && this.labirinto[y][x] === null;
-    }
-    
     
 }

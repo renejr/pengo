@@ -13,14 +13,15 @@ class BootScene extends Phaser.Scene {
         }); // Arcade
     }
 
-    create() {
+    create(){
         this.cameras.main.setBackgroundColor('#000000');
         let graphics = this.add.graphics();
         graphics.fillStyle(0xad82f7, 1); // Cor para as bordas
-
+        
         // Desenhar as bordas laterais
         graphics.fillRect(0, 0, 16, this.cameras.main.height); // Esquerda
         graphics.fillRect(this.cameras.main.width - 16, 0, 16, this.cameras.main.height); // Direita
+
 
         // Desenhar as bordas superiores e inferiores
         graphics.fillRect(0, 0, this.cameras.main.width, 16); // Topo
@@ -28,7 +29,7 @@ class BootScene extends Phaser.Scene {
 
         // Adicionar a imagem centralizada no mundo
         let image = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'pengoOpenBG');
-        
+
         // Ajustar a imagem para que ela fique centralizada dentro dos limites, considerando as bordas
         let scaleX = (this.cameras.main.width - 32) / image.width;
         let scaleY = (this.cameras.main.height - 32) / image.height;
@@ -36,7 +37,6 @@ class BootScene extends Phaser.Scene {
         image.setScale(scale).setScrollFactor(0);
 
         // Definições das animações do Pengo
-
         if (!this.anims.exists('up')) {
             // Animação de movimento para cima
             this.anims.create({
@@ -151,6 +151,7 @@ class BootScene extends Phaser.Scene {
 
         // Carrega e exibe scores
         this.loadAndDisplayScores();
+
     }
 
     loadAndDisplayScores() {
@@ -160,7 +161,7 @@ class BootScene extends Phaser.Scene {
             // Aqui você define como os scores serão exibidos
             // Por exemplo, exibir os top 5 scores
             scores.slice(0, 5).forEach((score, index) => {
-                this.add.text(240, 43 * (index + 5), `Rank ${index + 1}: ${score.pseudo} - ${score.score}`, { fontSize: '22px', fill: '#FFF' });
+                this.add.text(350, 43 * (index + 5), `Rank ${index + 1}: ${score.pseudo} - ${score.score}`, { fontSize: '42px', fill: '#FFF' });
             });
         })
         .catch(error => console.error('Erro ao buscar scores:', error));
