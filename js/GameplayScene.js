@@ -262,7 +262,7 @@ class GameplayScene extends Phaser.Scene {
     
         // Cria o Pengo na posição encontrada
         this.pengo = this.physics.add.sprite(posX, posY, pengoColor);
-        this.pengo.setOrigin(0.5, 0.5).setScale(3); // Centraliza o sprite
+        this.pengo.setOrigin(0.5, 0.5).setScale(1); // Centraliza o sprite
         this.pengo.setCollideWorldBounds(true); // Faz Pengo colidir com as bordas do mundo
     }
 
