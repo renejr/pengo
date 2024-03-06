@@ -12,6 +12,8 @@ class GameplayScene extends Phaser.Scene {
         this.pengoAcceleration = 600; // Quão rápido o Pengo acelera até a máxima velocidade
         // Inicializa a capacidade de criar blocos de gelo
         this.canCreateIceBlock = true; // Pengo pode criar um bloco de gelo imediatamente
+        this.iceBlocksAvailable = 3; // Inicializa com 3 blocos de gelo disponíveis
+        this.lastDirection = 'up'; // Valor padrão ou baseado na orientação inicial do Pengo
 
 
         this.SCORE_VALUES = {
@@ -164,43 +166,55 @@ class GameplayScene extends Phaser.Scene {
     update(time, delta) {
         // Verifica se a tecla espaço está pressionada
         const isSpaceDown = this.spaceBar.isDown;
-
-        // Verifica as teclas de direção
-        const isLeftDown = this.cursors.left.isDown;
-        const isRightDown = this.cursors.right.isDown;
-        const isUpDown = this.cursors.up.isDown;
-        const isDownDown = this.cursors.down.isDown;
-
-        // Se a tecla espaço e qualquer tecla de direção estiverem pressionadas, cria um bloco de gelo
-        if(isSpaceDown && (isLeftDown || isRightDown || isUpDown || isDownDown)){
-            this.createIceBlock();
+    
+        // Identifica qual tecla de direção está pressionada
+        let direction = null;
+        if (this.cursors.left.isDown) {
+            direction = 'left';
+        } else if (this.cursors.right.isDown) {
+            direction = 'right';
+        } else if (this.cursors.up.isDown) {
+            direction = 'up';
+        } else if (this.cursors.down.isDown) {
+            direction = 'down';
+        }
+    
+        // Verifica se o espaço e alguma direção estão pressionados simultaneamente
+        if (isSpaceDown && direction) {
+            this.createIceBlock(direction); // Passa a direção como argumento
         } else {
-            // Movimento para a esquerda
-            if (this.cursors.left.isDown) {
+            // Movimentação de Pengo baseada apenas na direção, sem criar bloco de gelo
+            this.handlePengoMovement(direction);
+        }
+    }
+    
+    handlePengoMovement(direction) {
+        // Reseta a velocidade para parar o Pengo quando nenhuma tecla direcional está pressionada
+        this.pengo.setVelocityX(0);
+        this.pengo.setVelocityY(0);
+    
+        // Define a nova velocidade e animação baseada na direção pressionada
+        switch (direction) {
+            case 'left':
                 this.pengo.setVelocityX(-this.pengoMaxSpeed);
                 this.pengo.anims.play('moveLeft', true);
-            } 
-            // Movimento para a direita
-            else if (this.cursors.right.isDown) {
+                break;
+            case 'right':
                 this.pengo.setVelocityX(this.pengoMaxSpeed);
-                this.pengo.anims.play('moveRight', true); // Certifique-se de ter a animação 'moveRight'
-            } 
-            // Movimento para cima
-            else if (this.cursors.up.isDown) {
+                this.pengo.anims.play('moveRight', true);
+                break;
+            case 'up':
                 this.pengo.setVelocityY(-this.pengoMaxSpeed);
                 this.pengo.anims.play('moveUp', true);
-            } 
-            // Movimento para baixo
-            else if (this.cursors.down.isDown) {
+                break;
+            case 'down':
                 this.pengo.setVelocityY(this.pengoMaxSpeed);
                 this.pengo.anims.play('moveDown', true);
-            } else {
-                // Parado (idle)
-                this.pengo.setVelocityX(0);
-                this.pengo.setVelocityY(0);
+                break;
+            default:
+                // Pengo está parado, executa a animação de 'idle'
                 this.pengo.anims.play('idle', true);
-            }
-            //console.log('no');
+                break;
         }
     }    
 
@@ -347,35 +361,48 @@ class GameplayScene extends Phaser.Scene {
         });
     }
 
-    createIceBlock() {
-        if (!this.canCreateIceBlock) return; // Verifica se está no cooldown
-
-        // Corrige o acesso à propriedade `pengo` usando `this.pengo`
-        let blockX = this.pengo.x + 16; // Ajuste conforme a direção do Pengo
+    createIceBlock(direction) {
+        if (!this.canCreateIceBlock || this.iceBlocksAvailable <= 0) return;
+    
+        let blockX = this.pengo.x;
         let blockY = this.pengo.y;
-
-        // Cria o bloco de gelo na posição calculada
+    
+        switch (direction) {
+            case 'left':
+                blockX -= 16; // Ajuste conforme necessário
+                break;
+            case 'right':
+                blockX += 16;
+                break;
+            case 'up':
+                blockY -= 16;
+                break;
+            case 'down':
+                blockY += 16;
+                break;
+        }
+    
         let iceBlock = this.add.sprite(blockX, blockY, 'pengoIceCrystal');
         this.physics.add.existing(iceBlock);
-        iceBlock.body.immovable = true; // Torna o bloco imóvel
-        // Supondo que você tenha um grupo para blocos de gelo, certifique-se de usar `this` para referenciar
+        iceBlock.body.immovable = true;
         if (!this.iceBlocks) {
             this.iceBlocks = this.physics.add.group({ immovable: true });
         }
-        this.iceBlocks.add(iceBlock); // Adiciona o bloco ao grupo de blocos de gelo
-        iceBlock.setDepth(3); // Define a profundidade do bloco de gelo como 3
+        this.iceBlocks.add(iceBlock);
+        iceBlock.setDepth(3);
     
-        // Inicia o temporizador para a remoção do bloco
+        this.iceBlocksAvailable -= 1;
+    
         this.time.delayedCall(5000, () => {
-            iceBlock.destroy(); // Remove o bloco após 5 segundos
+            iceBlock.destroy();
         }, [], this);
     
-        // Inicia o cooldown
         this.canCreateIceBlock = false;
-        this.time.delayedCall(3000, () => { // Cooldown de 3 segundos antes de criar outro bloco
+        this.time.delayedCall(3000, () => {
             this.canCreateIceBlock = true;
         }, [], this);
     }
+    
     
     configureSnooAnimations() {
         this.anims.create({
