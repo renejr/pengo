@@ -14,6 +14,7 @@ class GameplayScene extends Phaser.Scene {
         this.canCreateIceBlock = true; // Pengo pode criar um bloco de gelo imediatamente
         this.iceBlocksAvailable = 3; // Inicializa com 3 blocos de gelo disponíveis
         this.lastDirection = 'up'; // Valor padrão ou baseado na orientação inicial do Pengo
+        this.lives = 3; // Exemplo: Pengo começa com 3 vidas
 
 
         this.SCORE_VALUES = {
@@ -51,6 +52,10 @@ class GameplayScene extends Phaser.Scene {
                 numberOfEnemies: 15
             }
         };
+    }
+
+    createHUD() {
+        this.livesText = this.add.text(16, 16, 'Vidas: ' + this.lives, { fontSize: '18px', fill: '#FFFFFF' }).setScrollFactor(0);
     }
     
     preload() {
@@ -159,11 +164,19 @@ class GameplayScene extends Phaser.Scene {
         this.physics.add.collider(this.pengo, this.bordas);
         this.configurePengoAnimations(); // Configura as animações do Pengo
 
+        this.iceBlocks = this.physics.add.group({ immovable: true });
+
+        this.physics.add.collider(this.pengo, this.iceBlocks, this.handlePengoIceBlockCollision, null, this);
+
         // Habilita a colisão do Pengo com os limites do mundo ajustado
         this.pengo.setCollideWorldBounds(true);
+
+        this.createHUD(); // Inicializa o HUD
     }
 
     update(time, delta) {
+        if (!this.pengo || this.pengo.body === undefined) return; // Adiciona esta verificação
+
         // Verifica se a tecla espaço está pressionada
         const isSpaceDown = this.spaceBar.isDown;
     
@@ -189,6 +202,9 @@ class GameplayScene extends Phaser.Scene {
     }
     
     handlePengoMovement(direction) {
+        // Garante que todas as chamadas para pengo usem 'this.pengo'
+        if (!this.pengo || this.pengo.body === undefined) return; // Precaução extra
+
         // Reseta a velocidade para parar o Pengo quando nenhuma tecla direcional está pressionada
         this.pengo.setVelocityX(0);
         this.pengo.setVelocityY(0);
@@ -218,6 +234,22 @@ class GameplayScene extends Phaser.Scene {
         }
     }    
 
+    handlePengoIceBlockCollision(pengo, iceBlock) {
+        iceBlock.destroy(); // Destrói o iceBlock
+        this.lives -= 1; // Decrementa uma vida
+        this.livesText.setText('Vidas: ' + this.lives); // Atualiza o HUD
+    
+        if (this.lives > 0) {
+            // Respawn do Pengo na posição do iceBlock
+            pengo.x = iceBlock.x;
+            pengo.y = iceBlock.y;
+        } else {
+            // Handle game over scenario
+            pengo.destroy();
+            this.scene.restart(); // Ou qualquer lógica de "game over" que preferir
+        }
+    }
+    
     advanceLevel() {
         // Incrementa o nível
         this.currentLevel++;
