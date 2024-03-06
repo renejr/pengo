@@ -104,9 +104,6 @@ class GameplayScene extends Phaser.Scene {
         this.currentDifficulty = this.game.registry.get('currentDifficulty') || 'Normal';
         let lives = this.game.registry.get('lives') || 4;
 
-        // Adiciona a borda superior
-        //this.add.image(0, 0, 'pengoBordaSupInf').setOrigin(0, 0);
-
         // Cria os grupos de física para as bordas
         this.bordas = this.physics.add.staticGroup();
 
@@ -117,25 +114,12 @@ class GameplayScene extends Phaser.Scene {
         let gameHeight = this.game.config.height;
         this.bordas.create(0, gameHeight - 16, 'pengoBordaSupInf').setOrigin(0, 0).refreshBody();
 
-        // Adiciona a borda inferior
-        // Nota: Ajuste 'gameHeight' para a altura real da sua cena
-        // let gameHeight = this.game.config.height;
-        // this.add.image(0, gameHeight - 16, 'pengoBordaSupInf').setOrigin(0, 0);
-
         // Adiciona a borda esquerda
         this.bordas.create(0, 16, 'pengoBordasVert').setOrigin(0, 0).refreshBody();
 
-        // Adiciona a borda esquerda, iniciando após 16 pixels para baixo
-        //this.add.image(0, 16, 'pengoBordasVert').setOrigin(0, 0);
-
         // Adiciona a borda direita
         let gameWidth = this.game.config.width;
-        this.bordas.create(gameWidth - 16, 16, 'pengoBordasVert').setOrigin(1, 0).refreshBody();
-
-        // Adiciona a borda direita, iniciando após 16 pixels para baixo
-        // Nota: Ajuste 'gameWidth' para a largura real da sua cena
-        //let gameWidth = this.game.config.width;
-        //this.add.image(gameWidth , 16, 'pengoBordasVert').setOrigin(1, 0); // origin ajustado para alinhar à direita
+        this.bordas.create(gameWidth - 16, 16, 'pengoBordasVert').setOrigin(0, 0).refreshBody();
 
         // Posição inicial de Pengo no centro do labirinto
         // Exemplo de ajuste de posição inicial dentro dos limites
