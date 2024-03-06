@@ -105,24 +105,42 @@ class GameplayScene extends Phaser.Scene {
         let lives = this.game.registry.get('lives') || 4;
 
         // Adiciona a borda superior
-        this.add.image(0, 0, 'pengoBordaSupInf').setOrigin(0, 0);
+        //this.add.image(0, 0, 'pengoBordaSupInf').setOrigin(0, 0);
+
+        // Cria os grupos de física para as bordas
+        this.bordas = this.physics.add.staticGroup();
+
+        // Adiciona a borda superior como um objeto de física
+        this.bordas.create(0, 0, 'pengoBordaSupInf').setOrigin(0, 0).refreshBody();
+
+        // Adiciona a borda inferior
+        let gameHeight = this.game.config.height;
+        this.bordas.create(0, gameHeight - 16, 'pengoBordaSupInf').setOrigin(0, 0).refreshBody();
 
         // Adiciona a borda inferior
         // Nota: Ajuste 'gameHeight' para a altura real da sua cena
-        let gameHeight = this.game.config.height;
-        this.add.image(0, gameHeight - 16, 'pengoBordaSupInf').setOrigin(0, 0);
+        // let gameHeight = this.game.config.height;
+        // this.add.image(0, gameHeight - 16, 'pengoBordaSupInf').setOrigin(0, 0);
+
+        // Adiciona a borda esquerda
+        this.bordas.create(0, 16, 'pengoBordasVert').setOrigin(0, 0).refreshBody();
 
         // Adiciona a borda esquerda, iniciando após 16 pixels para baixo
-        this.add.image(0, 16, 'pengoBordasVert').setOrigin(0, 0);
+        //this.add.image(0, 16, 'pengoBordasVert').setOrigin(0, 0);
+
+        // Adiciona a borda direita
+        let gameWidth = this.game.config.width;
+        this.bordas.create(gameWidth - 16, 16, 'pengoBordasVert').setOrigin(1, 0).refreshBody();
 
         // Adiciona a borda direita, iniciando após 16 pixels para baixo
         // Nota: Ajuste 'gameWidth' para a largura real da sua cena
-        let gameWidth = this.game.config.width;
-        this.add.image(gameWidth , 16, 'pengoBordasVert').setOrigin(1, 0); // origin ajustado para alinhar à direita
+        //let gameWidth = this.game.config.width;
+        //this.add.image(gameWidth , 16, 'pengoBordasVert').setOrigin(1, 0); // origin ajustado para alinhar à direita
 
         // Posição inicial de Pengo no centro do labirinto
-        const startX = this.game.config.width / 2;
-        const startY = this.game.config.height / 2;
+        // Exemplo de ajuste de posição inicial dentro dos limites
+        const startX = (this.game.config.width - 32) / 2;
+        const startY = (this.game.config.height - 32) / 2;
 
         // Configura o jogo baseado na dificuldade selecionada
         this.configureGameplay(this.currentDifficulty);
@@ -136,8 +154,17 @@ class GameplayScene extends Phaser.Scene {
 
         this.criarLabirinto(); // Inicializa o labirinto
 
-        this.criarPengo(); // Após criar o Pengo
+        // Ajusta os limites do mundo para garantir que o Pengo respeite as bordas de 16px
+        this.physics.world.bounds.width = this.game.config.width - 16; // Subtrai 16px de cada lado (esquerda e direita)
+        this.physics.world.bounds.height = this.game.config.height - 16; // Subtrai 16px de cada lado (topo e inferior)
+
+        // Após criar o Pengo e as bordas...
+        this.criarPengo();
+        this.physics.add.collider(this.pengo, this.bordas);
         this.configurePengoAnimations(); // Configura as animações do Pengo
+
+        // Habilita a colisão do Pengo com os limites do mundo ajustado
+        this.pengo.setCollideWorldBounds(true);
     }
 
     update(time, delta) {
@@ -153,8 +180,13 @@ class GameplayScene extends Phaser.Scene {
         } 
         // Movimento para cima
         else if (this.cursors.up.isDown) {
-            this.pengo.setVelocityY(-this.pengoMaxSpeed);
-            this.pengo.anims.play('moveUp', true);
+             // Exibir posição x e y do Pengo no console
+            //console.log(`Pengo's Position - X: ${this.pengo.x}, Y: ${this.pengo.y}`);
+        
+            //if(this.pengo.y >= 32){
+                this.pengo.setVelocityY(-this.pengoMaxSpeed);
+                this.pengo.anims.play('moveUp', true);
+           // }
         } 
         // Movimento para baixo
         else if (this.cursors.down.isDown) {
