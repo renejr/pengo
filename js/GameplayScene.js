@@ -10,6 +10,8 @@ class GameplayScene extends Phaser.Scene {
         this.pengoVelocity = { x: 0, y: 0 };
         this.pengoMaxSpeed = 160; // Máxima velocidade do Pengo em pixels por segundo
         this.pengoAcceleration = 600; // Quão rápido o Pengo acelera até a máxima velocidade
+        // Inicializa a capacidade de criar blocos de gelo
+        this.canCreateIceBlock = true; // Pengo pode criar um bloco de gelo imediatamente
 
 
         this.SCORE_VALUES = {
@@ -100,9 +102,10 @@ class GameplayScene extends Phaser.Scene {
             frameHeight: Math.floor(16)
         }); // Arcade
 
-
-
-
+        this.load.spritesheet('snooGreen', './assets/arcade/snooGreen.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
     }
 
     create(){
@@ -141,6 +144,7 @@ class GameplayScene extends Phaser.Scene {
 
         // Configura entradas do teclado
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         this.criarLabirinto(); // Inicializa o labirinto
 
@@ -158,35 +162,45 @@ class GameplayScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        // Movimento para a esquerda
-        if (this.cursors.left.isDown) {
-            this.pengo.setVelocityX(-this.pengoMaxSpeed);
-            this.pengo.anims.play('moveLeft', true);
-        } 
-        // Movimento para a direita
-        else if (this.cursors.right.isDown) {
-            this.pengo.setVelocityX(this.pengoMaxSpeed);
-            this.pengo.anims.play('moveRight', true); // Certifique-se de ter a animação 'moveRight'
-        } 
-        // Movimento para cima
-        else if (this.cursors.up.isDown) {
-             // Exibir posição x e y do Pengo no console
-            //console.log(`Pengo's Position - X: ${this.pengo.x}, Y: ${this.pengo.y}`);
-        
-            //if(this.pengo.y >= 32){
+        // Verifica se a tecla espaço está pressionada
+        const isSpaceDown = this.spaceBar.isDown;
+
+        // Verifica as teclas de direção
+        const isLeftDown = this.cursors.left.isDown;
+        const isRightDown = this.cursors.right.isDown;
+        const isUpDown = this.cursors.up.isDown;
+        const isDownDown = this.cursors.down.isDown;
+
+        // Se a tecla espaço e qualquer tecla de direção estiverem pressionadas, cria um bloco de gelo
+        if(isSpaceDown && (isLeftDown || isRightDown || isUpDown || isDownDown)){
+            this.createIceBlock();
+        } else {
+            // Movimento para a esquerda
+            if (this.cursors.left.isDown) {
+                this.pengo.setVelocityX(-this.pengoMaxSpeed);
+                this.pengo.anims.play('moveLeft', true);
+            } 
+            // Movimento para a direita
+            else if (this.cursors.right.isDown) {
+                this.pengo.setVelocityX(this.pengoMaxSpeed);
+                this.pengo.anims.play('moveRight', true); // Certifique-se de ter a animação 'moveRight'
+            } 
+            // Movimento para cima
+            else if (this.cursors.up.isDown) {
                 this.pengo.setVelocityY(-this.pengoMaxSpeed);
                 this.pengo.anims.play('moveUp', true);
-           // }
-        } 
-        // Movimento para baixo
-        else if (this.cursors.down.isDown) {
-            this.pengo.setVelocityY(this.pengoMaxSpeed);
-            this.pengo.anims.play('moveDown', true);
-        } else {
-            // Parado (idle)
-            this.pengo.setVelocityX(0);
-            this.pengo.setVelocityY(0);
-            this.pengo.anims.play('idle', true);
+            } 
+            // Movimento para baixo
+            else if (this.cursors.down.isDown) {
+                this.pengo.setVelocityY(this.pengoMaxSpeed);
+                this.pengo.anims.play('moveDown', true);
+            } else {
+                // Parado (idle)
+                this.pengo.setVelocityX(0);
+                this.pengo.setVelocityY(0);
+                this.pengo.anims.play('idle', true);
+            }
+            //console.log('no');
         }
     }    
 
@@ -329,6 +343,81 @@ class GameplayScene extends Phaser.Scene {
         this.anims.create({
             key: 'idle',
             frames: [{ key: this.pengo.texture.key, frame: 22 }],
+            frameRate: 10
+        });
+    }
+
+    createIceBlock() {
+        if (!this.canCreateIceBlock) return; // Verifica se está no cooldown
+
+        // Corrige o acesso à propriedade `pengo` usando `this.pengo`
+        let blockX = this.pengo.x + 16; // Ajuste conforme a direção do Pengo
+        let blockY = this.pengo.y;
+
+        // Cria o bloco de gelo na posição calculada
+        let iceBlock = this.add.sprite(blockX, blockY, 'pengoIceCrystal');
+        this.physics.add.existing(iceBlock);
+        iceBlock.body.immovable = true; // Torna o bloco imóvel
+        // Supondo que você tenha um grupo para blocos de gelo, certifique-se de usar `this` para referenciar
+        if (!this.iceBlocks) {
+            this.iceBlocks = this.physics.add.group({ immovable: true });
+        }
+        this.iceBlocks.add(iceBlock); // Adiciona o bloco ao grupo de blocos de gelo
+        iceBlock.setDepth(3); // Define a profundidade do bloco de gelo como 3
+    
+        // Inicia o temporizador para a remoção do bloco
+        this.time.delayedCall(5000, () => {
+            iceBlock.destroy(); // Remove o bloco após 5 segundos
+        }, [], this);
+    
+        // Inicia o cooldown
+        this.canCreateIceBlock = false;
+        this.time.delayedCall(3000, () => { // Cooldown de 3 segundos antes de criar outro bloco
+            this.canCreateIceBlock = true;
+        }, [], this);
+    }
+    
+    configureSnooAnimations() {
+        this.anims.create({
+            key: 'moveDown',
+            frames: this.anims.generateFrameNumbers(this.pengo.texture.key, { start: 8, end: 9 }),
+            frameRate: 10,
+            repeat: -1
+        });
+    
+        this.anims.create({
+            key: 'moveLeft',
+            frames: this.anims.generateFrameNumbers(this.pengo.texture.key, { start: 10, end: 11 }),
+            frameRate: 10,
+            repeat: -1
+        });
+    
+        this.anims.create({
+            key: 'moveUp',
+            frames: this.anims.generateFrameNumbers(this.pengo.texture.key, { start: 12, end: 13 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'moveRight',
+            frames: this.anims.generateFrameNumbers(this.pengo.texture.key, { start: 14, end: 15 }),
+            frameRate: 10,
+            repeat: -1
+        });
+    
+        if (!this.anims.exists('die')) {
+            this.anims.create({
+                key: 'die',
+                frames: this.anims.generateFrameNumbers('pengo', { start: 0, end: 7 }),
+                frameRate: 10,
+                repeat: 0
+            });
+        }
+    
+        this.anims.create({
+            key: 'idle',
+            frames: [{ key: this.pengo.texture.key, frame: 8 }],
             frameRate: 10
         });
     }
