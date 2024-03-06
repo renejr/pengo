@@ -58,6 +58,8 @@ class GameplayScene extends Phaser.Scene {
         // Blocos indestrutíveis
         this.load.image('blocoDuro', './assets/arcade/blocoGeloDuro.png');
 
+        this.load.image('pengoIceCrystal', './assets/crystal_resized.png');
+
         this.load.spritesheet('redPengo', './assets/arcade/redPengo.png', {
             frameWidth: Math.floor(16),
             frameHeight: Math.floor(16)
@@ -97,6 +99,10 @@ class GameplayScene extends Phaser.Scene {
             frameWidth: Math.floor(16),
             frameHeight: Math.floor(16)
         }); // Arcade
+
+
+
+
     }
 
     create(){
@@ -322,7 +328,7 @@ class GameplayScene extends Phaser.Scene {
     
         this.anims.create({
             key: 'idle',
-            frames: [{ key: this.pengo.texture.key, frame: 18 }],
+            frames: [{ key: this.pengo.texture.key, frame: 22 }],
             frameRate: 10
         });
     }
