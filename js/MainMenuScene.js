@@ -30,6 +30,10 @@ class MainMenuScene extends Phaser.Scene {
         optionsButton.setOrigin(0.5);
 
         playButton.on('pointerdown', () => {
+            // Armazenar as configurações no registro
+            this.game.registry.set('currentDifficulty', currentDifficulty);
+            this.game.registry.set('lives', lives);
+
             // Inicia a cena de gameplay
             this.scene.start('GameplayScene');
         });        

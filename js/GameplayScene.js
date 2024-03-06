@@ -117,8 +117,12 @@ class GameplayScene extends Phaser.Scene {
 
     create(){
         // Acessa valores do registry
-        this.currentDifficulty = this.game.registry.get('currentDifficulty') || 'Normal';
+        let currentDifficulty = this.game.registry.get('currentDifficulty') || 'Normal';
         let lives = this.game.registry.get('lives') || 4;
+
+        // Usa os valores conforme necessário
+        this.currentDifficulty = currentDifficulty;
+        this.lives = lives;
 
         // Cria os grupos de física para as bordas
         this.bordas = this.physics.add.staticGroup();

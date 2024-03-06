@@ -28,11 +28,11 @@ class SettingsScene extends Phaser.Scene {
         let currentDifficulty = this.game.registry.get('currentDifficulty') || 'Normal'; // Valor padrão: Normal
         let lives = this.game.registry.get('lives') || 4; // Valor padrão: 4
 
-        let difficultyText = this.add.text(320, 100, `Dificuldade: ${currentDifficulty}`, { fontSize: '42px', fill: '#FFF' }).setInteractive();
-        let livesText = this.add.text(320, 150, `Vidas: ${lives}`, { fontSize: '42px', fill: '#FFF' }).setInteractive();
+        let difficultyText = this.add.text(420, 200, `Dificuldade: ${currentDifficulty}`, { fontSize: '42px', fill: '#FFF' }).setInteractive();
+        let livesText = this.add.text(420, 250, `Vidas: ${lives}`, { fontSize: '42px', fill: '#FFF' }).setInteractive();
 
         // Botão voltar
-        let backButton = this.add.text(320, 250, 'Voltar', { fontSize: '42px', fill: '#FFF' }).setInteractive();
+        let backButton = this.add.text(420, 300, 'Voltar', { fontSize: '42px', fill: '#FFF' }).setInteractive();
 
         difficultyText.on('pointerdown', () => this.changeDifficulty(difficultyText));
         livesText.on('pointerdown', () => this.changeLives(livesText));
