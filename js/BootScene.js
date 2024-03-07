@@ -151,7 +151,6 @@ class BootScene extends Phaser.Scene {
 
         // Carrega e exibe scores
         this.loadAndDisplayScores();
-
     }
 
     loadAndDisplayScores() {

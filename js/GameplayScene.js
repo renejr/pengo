@@ -15,6 +15,7 @@ class GameplayScene extends Phaser.Scene {
         this.iceBlocksAvailable = 3; // Inicializa com 3 blocos de gelo disponíveis
         this.lastDirection = 'up'; // Valor padrão ou baseado na orientação inicial do Pengo
         this.lives = 3; // Exemplo: Pengo começa com 3 vidas
+        this.snoos = null; // Grupo para os Snoos
 
 
         this.SCORE_VALUES = {
@@ -113,6 +114,46 @@ class GameplayScene extends Phaser.Scene {
             frameWidth: Math.floor(16),
             frameHeight: Math.floor(16)
         }); // Arcade
+
+        this.load.spritesheet('snooBlue', './assets/arcade/snooBlue.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('snooGold', './assets/arcade/snooGold.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('snooLightBlue', './assets/arcade/snooLightBlue.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('snooOrange', './assets/arcade/snooOrange.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('snooPink', './assets/arcade/snooPink.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('snooRed', './assets/arcade/snooRed.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('snooYellow', './assets/arcade/snooYellow.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
+
+        this.load.spritesheet('snooYellow2', './assets/arcade/snooYellow2.png', {
+            frameWidth: Math.floor(16),
+            frameHeight: Math.floor(16)
+        }); // Arcade
     }
 
     create(){
@@ -176,6 +217,9 @@ class GameplayScene extends Phaser.Scene {
         this.pengo.setCollideWorldBounds(true);
 
         this.createHUD(); // Inicializa o HUD
+
+        this.createSnoos();
+
     }
 
     update(time, delta) {
@@ -257,7 +301,7 @@ class GameplayScene extends Phaser.Scene {
     advanceLevel() {
         // Incrementa o nível
         this.currentLevel++;
-        console.log('Nível Atual:', this.currentLevel);
+       // console.log('Nível Atual:', this.currentLevel);
 
         // Aqui você pode ajustar a dificuldade baseada no nível atual
         // e reiniciar ou atualizar a cena conforme necessário
@@ -268,7 +312,7 @@ class GameplayScene extends Phaser.Scene {
         let settings = this.difficultySettings[difficulty];
 
         // Configura os parâmetros do jogo
-        console.log('Configurações para a dificuldade:', settings);
+        //console.log('Configurações para a dificuldade:', settings);
         // Por exemplo, ajustar a velocidade dos inimigos e a quantidade
         // this.enemySpeed = settings.enemySpeed;
         // this.numberOfEnemies = settings.numberOfEnemies;
@@ -350,6 +394,48 @@ class GameplayScene extends Phaser.Scene {
         this.pengo = this.physics.add.sprite(posX, posY, pengoColor);
         this.pengo.setOrigin(0.5, 0.5).setScale(1); // Centraliza o sprite
         this.pengo.setCollideWorldBounds(true); // Faz Pengo colidir com as bordas do mundo
+    }
+
+    createSnoos() {
+        // Definições de parâmetros do Snoo por fase
+        const snooSettingsByLevel = {
+            1: { type: 'snooGreen', frameStart: 0, frameEnd: 3, speed: 100, quantity: 3 },
+            2: { type: 'snooBlue', frameStart: 0, frameEnd: 3, speed: 120, quantity: 4 },
+            // Defina mais conforme necessário, ajustando frameStart e frameEnd para as animações
+        };
+    
+        // Escolha de Snoo por fase
+        const currentSnooSettings = snooSettingsByLevel[this.currentLevel] || snooSettingsByLevel[1]; // Padrão para fase 1 se indefinido
+        this.snoos = this.physics.add.group();
+    
+        for (let i = 0; i < currentSnooSettings.quantity; i++) {
+            let snoo = this.snoos.create(this.randomPosition().x, this.randomPosition().y, currentSnooSettings.type);
+            snoo.setVelocity(Phaser.Math.Between(-currentSnooSettings.speed, currentSnooSettings.speed), Phaser.Math.Between(-currentSnooSettings.speed, currentSnooSettings.speed));
+            snoo.play('snooMove');
+        }
+    
+        this.configureSnooAnimations(currentSnooSettings.type, currentSnooSettings.frameStart, currentSnooSettings.frameEnd);
+    }
+    
+    // Novo método para configurar animações dos Snoos
+    configureSnooAnimations(spriteKey, startFrame, endFrame) {
+        this.anims.create({
+            key: 'snooMove',
+            frames: this.anims.generateFrameNumbers(spriteKey, { start: startFrame, end: endFrame }),
+            frameRate: 10,
+            repeat: -1
+        });
+    
+        // Certifique-se de que cada Snoo inicie sua animação
+        this.snoos.children.iterate((snoo) => {
+            snoo.anims.play('snooMove', true);
+        });
+    }
+
+    randomPosition() {
+        // Esta função deve retornar uma posição aleatória válida dentro do labirinto onde um Snoo pode ser colocado
+        // Implemente esta função de acordo com a lógica do seu labirinto
+        return { x: Phaser.Math.Between(100, 700), y: Phaser.Math.Between(100, 500) };
     }
 
     configurePengoAnimations() {
@@ -437,52 +523,5 @@ class GameplayScene extends Phaser.Scene {
         this.time.delayedCall(3000, () => {
             this.canCreateIceBlock = true;
         }, [], this);
-    }
-    
-    
-    configureSnooAnimations() {
-        this.anims.create({
-            key: 'moveDown',
-            frames: this.anims.generateFrameNumbers(this.pengo.texture.key, { start: 8, end: 9 }),
-            frameRate: 10,
-            repeat: -1
-        });
-    
-        this.anims.create({
-            key: 'moveLeft',
-            frames: this.anims.generateFrameNumbers(this.pengo.texture.key, { start: 10, end: 11 }),
-            frameRate: 10,
-            repeat: -1
-        });
-    
-        this.anims.create({
-            key: 'moveUp',
-            frames: this.anims.generateFrameNumbers(this.pengo.texture.key, { start: 12, end: 13 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'moveRight',
-            frames: this.anims.generateFrameNumbers(this.pengo.texture.key, { start: 14, end: 15 }),
-            frameRate: 10,
-            repeat: -1
-        });
-    
-        if (!this.anims.exists('die')) {
-            this.anims.create({
-                key: 'die',
-                frames: this.anims.generateFrameNumbers('pengo', { start: 0, end: 7 }),
-                frameRate: 10,
-                repeat: 0
-            });
-        }
-    
-        this.anims.create({
-            key: 'idle',
-            frames: [{ key: this.pengo.texture.key, frame: 8 }],
-            frameRate: 10
-        });
-    }
-    
+    }   
 }
